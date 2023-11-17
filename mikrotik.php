@@ -60,7 +60,7 @@ function mikrotik_get_wlan()
       header('Content-Type: application/json');
       echo json_encode($signalList);
   }
-  
+
 function mikrotik_get_resources()
 {
     global $routes;
@@ -300,5 +300,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $client->disconnect();
         }
     }
+  }
 }
+
+function mikrotik_monitor_traffic()
+{
+    $interface  = $_GET["interface"];
+    global $routes;
+    $router = $routes['2'];
+    $mikrotik = ORM::for_table('tbl_routers')->where('enabled', '1')->find_one($router);
+    $client = Mikrotik::getClient($mikrotik['ip_address'], $mikrotik['username'], $mikrotik['password']);
+
+    try {
+        $results = $client->sendSync(
+            (new RouterOS\Request('/interface/monitor-traffic'))
+                ->setArgument('interface', $interface)
+                ->setArgument('once', '')
+        );
+
+        $rows = array();
+        $rows2 = array();
+        $labels = array();
+
+        foreach ($results as $result) {
+            $ftx = $result->getProperty('tx-bits-per-second');
+            $frx = $result->getProperty('rx-bits-per-second');
+
+            $rows[] = $ftx;
+            $rows2[] = $frx;
+            $labels[] = date('Y-m-d H:i:s');
+        }
+
+        $result = array(
+            'labels' => $labels,
+            'rows' => array(
+                'tx' => $rows,
+                'rx' => $rows2
+            )
+        );
+    } catch (Exception $e) {
+        $result = array('error' => $e->getMessage());
+    }
+
+    // Return the result as JSON
+    header('Content-Type: application/json');
+    echo json_encode($result);
 }
