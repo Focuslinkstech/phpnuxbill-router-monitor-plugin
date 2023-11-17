@@ -16,8 +16,9 @@
 [@ibnux](https://t.me/ibnux)
 
 ## Screenshot
+![image](https://github.com/Focuslinkstech/phpnuxbill-router-monitor-plugin/assets/45756999/da19fe3b-e26c-4cb5-bedf-77f1cb41f344)
 
- ![image](https://github.com/Focuslinkstech/phpnuxbill-router-monitor-plugin/assets/45756999/d9163274-8e4c-4023-97a4-d0df74cedca1)
+
 
 ## Installation
 
