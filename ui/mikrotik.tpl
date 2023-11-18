@@ -360,7 +360,7 @@ function createChart() {
           display: true,
           title: {
             display: true,
-            text: 'Traffic'
+            text: 'Traffic bps'
           }
         }
       }

@@ -328,7 +328,7 @@ function mikrotik_monitor_traffic()
 
             $rows[] = $ftx;
             $rows2[] = $frx;
-            $labels[] = date('Y-m-d H:i:s');
+            $labels[] = date('H:i:s');
         }
 
         $result = array(
