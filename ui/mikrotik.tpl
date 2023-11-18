@@ -339,6 +339,7 @@
           rxData: []
         };
         // Function to create and update the chart
+        // Function to create and update the chart
         function createChart() {
           var ctx = document.getElementById('chart').getContext('2d');
           chart = new Chart(ctx, {
@@ -379,17 +380,20 @@
                   },
                   ticks: {
                     callback: function(value) {
-                      return formatBytes(value); // Let format the tick values using formatBytes()
+                      return formatBytes(value); // Lets format the tick values using formatBytes()
                     }
                   }
                 }
               },
-              tooltips: {
-                callbacks: {
-                  label: function(tooltipItem, data) {
-                    var datasetLabel = data.datasets[tooltipItem.datasetIndex].label || '';
-                    var value = tooltipItem.value || 0;
-                    return datasetLabel + ': ' + formatBytes(value) + 'ps';
+			  //let add formatBytes to tooltip
+              plugins: {
+                tooltip: {
+                  callbacks: {
+                    label: function(context) {
+                      var label = context.dataset.label || '';
+                      var value = context.parsed.y || 0;
+                      return label + ': ' + formatBytes(value) + 'ps';
+                    }
                   }
                 }
               }
@@ -463,5 +467,5 @@
         // Example usage:
         startRefresh();
       </script> 
-	  
-	  {include file="sections/footer.tpl"}
+
+      {include file="sections/footer.tpl"}
