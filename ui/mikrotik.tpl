@@ -360,7 +360,21 @@ function createChart() {
           display: true,
           title: {
             display: true,
-            text: 'Traffic bps'
+            text: 'Traffic Bytes'
+          },
+          ticks: {
+            callback: function(value) {
+              return formatBytes(value); // Let format the tick values using formatBytes()
+            }
+          }
+        }
+      },
+      tooltips: {
+        callbacks: {
+          label: function (tooltipItem, data) {
+            var datasetLabel = data.datasets[tooltipItem.datasetIndex].label || '';
+            var value = tooltipItem.value || 0;
+            return datasetLabel + ': ' + formatBytes(value) + 'ps';
           }
         }
       }
