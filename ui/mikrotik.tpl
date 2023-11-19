@@ -211,7 +211,7 @@
             // Add any additional options or configurations as needed
           });
           $j.ajax({
-            url: '{$_url}plugin/get_ppp_online_users/{$router}',
+            url: '{$_url}plugin/mikrotik_get_ppp_online_users/{$router}',
             method: 'GET',
             success: function(response) {
               // Update the DataTable with the fetched user list data
@@ -247,7 +247,7 @@
             // Add any additional options or configurations as needed
           });
           $j.ajax({
-            url: '{$_url}plugin/get_hotspot_online_users/{$router}',
+            url: '{$_url}plugin/mikrotik_get_hotspot_online_users/{$router}',
             method: 'GET',
             success: function(response) {
               // Update the DataTable with the fetched user list data
@@ -380,12 +380,11 @@
                   },
                   ticks: {
                     callback: function(value) {
-                      return formatBytes(value); // Lets format the tick values using formatBytes()
+                      return formatBytes(value); // Format the tick values using formatBytes()
                     }
                   }
                 }
               },
-			  //let add formatBytes to tooltip
               plugins: {
                 tooltip: {
                   callbacks: {

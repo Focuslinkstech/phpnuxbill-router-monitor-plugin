@@ -71,7 +71,7 @@ function mikrotik_get_resources()
     $res = $client->sendSync(new RouterOS\Request('/system resource print'));
 
     // Function to round the value and append the appropriate unit
-    function formatSize($size)
+    function mikrotik_formatSize($size)
     {
         $units = ['B', 'KB', 'MB', 'GB'];
         $unitIndex = 0;
@@ -109,7 +109,7 @@ function mikrotik_get_resources()
     $table .= '
 	<tr>
 		<th>Mem used/free/total</th>
-		<td>'.formatSize($res->getProperty('total-memory') - $res->getProperty('free-memory')).' / '.formatSize($res->getProperty('free-memory')).' / '.formatSize($res->getProperty('total-memory')).'</td>
+		<td>'.mikrotik_formatSize($res->getProperty('total-memory') - $res->getProperty('free-memory')).' / '.mikrotik_formatSize($res->getProperty('free-memory')).' / '.mikrotik_formatSize($res->getProperty('total-memory')).'</td>
 		<th>CPU</th>
 		<td>'.$res->getProperty('cpu').'</td>
 		<th>CPU count/freq/load</th>
@@ -120,7 +120,7 @@ function mikrotik_get_resources()
     $table .= '
 	<tr>
 		<th>Hdd</th>
-		<td>'.formatSize($res->getProperty('free-hdd-space')).' / '.formatSize($res->getProperty('total-hdd-space')).'</td>
+		<td>'.mikrotik_formatSize($res->getProperty('free-hdd-space')).' / '.mikrotik_formatSize($res->getProperty('total-hdd-space')).'</td>
 		<th>Bad Blocks</th>
 		<td>'.$res->getProperty('bad-blocks').'</td>
 		<th>Write Total</th>
@@ -157,26 +157,27 @@ function mikrotik_get_traffic()
             'status' => $interface->getProperty('running') === 'true' ? '
 <small class="label bg-green">up</small>' : '
 <small class="label bg-red">down</small>',
-            'tx' => formatBytes($txBytes),
-            'rx' => formatBytes($rxBytes)
+            'tx' => mikrotik_formatBytes($txBytes),
+            'rx' => mikrotik_formatBytes($rxBytes)
         ];
     }
 
     header('Content-Type: application/json');
     echo json_encode($interfaceData);
 }
-// Function to format bytes into KB, MB, or GB
-function formatBytes($bytes, $precision = 2)
+
+// Function to format bytes into KB, MB, GB or TB
+function mikrotik_formatBytes($bytes, $precision = 2)
 {
-    $units = ['B', 'KB', 'MB', 'GB'];
+    $units = ['B', 'KB', 'MB', 'GB', 'TB'];
     $bytes = max($bytes, 0);
     $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
     $pow = min($pow, count($units) - 1);
-    $bytes /= (1 << (10 * $pow));
+    $bytes /= pow(1024, $pow);
     return round($bytes, $precision) . ' ' . $units[$pow];
 }
 
-function get_ppp_online_users()
+function mikrotik_get_ppp_online_users()
 {
     global $routes;
     $router = $routes['2'];
@@ -211,21 +212,9 @@ function get_ppp_online_users()
 }
 
 
-function format_bytes($bytes)
-{
-    $units = array('B', 'KB', 'MB', 'GB', 'TB');
-
-    $bytes = max($bytes, 0);
-    $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
-    $pow = min($pow, count($units) - 1);
-
-    $bytes /= pow(1024, $pow);
-
-    return round($bytes, 2) . ' ' . $units[$pow];
-}
 
 
-function get_hotspot_online_users()
+function mikrotik_get_hotspot_online_users()
 {
     global $routes;
     $router = $routes['2'];
@@ -251,9 +240,9 @@ function get_hotspot_online_users()
             'server' => $server,
             'mac' => $mac,
             'session_time' => $sessionTime,
-            'rx_bytes' => format_bytes($rxBytes),
-            'tx_bytes' => format_bytes($txBytes),
-            'total' => format_bytes($txBytes + $rxBytes),
+            'rx_bytes' => mikrotik_formatBytes($rxBytes),
+            'tx_bytes' => mikrotik_formatBytes($txBytes),
+            'total' => mikrotik_formatBytes($txBytes + $rxBytes),
         ];
     }
 
@@ -263,7 +252,7 @@ function get_hotspot_online_users()
 
 }
 
-function disconnect_user($router, $username, $userType)
+function mikrotik_disconnect_online_user($router, $username, $userType)
 {
   // Check if the form was submitted
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
