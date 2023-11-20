@@ -169,7 +169,7 @@ function mikrotik_get_traffic()
 // Function to format bytes into KB, MB, GB or TB
 function mikrotik_formatBytes($bytes, $precision = 2)
 {
-    $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    $units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
     $bytes = max($bytes, 0);
     $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
     $pow = min($pow, count($units) - 1);
