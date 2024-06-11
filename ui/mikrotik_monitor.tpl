@@ -1,48 +1,13 @@
 {include file="sections/header.tpl"}
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css"> {literal} <style>
-  table {
-    border-collapse: collapse;
-    width: 100%;
-  }
-
-  th,
-  td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: left;
-  }
-
-  th.custom-class {
-    background-color: #f2f2f2;
-    color: #000;
-    font-weight: bold;
-  }
-
-  tr.even-row {
-    background-color: #f2f2f2;
-  }
-
-  tr.custom-class {
-    color: blue;
-    font-weight: bold;
-  }
-
-  #ppp-table th,
-  #ppp-table td {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    width: 100px;
-  }
-</style> {/literal} <div class="box-body table-responsive no-padding">
+<div class="box-body table-responsive no-padding">
   <div class="col-sm-12 col-md-12">
-    <form class="form-horizontal" method="post" role="form" action="{$_url}plugin/mikrotik_ui">
+    <form class="form-horizontal" method="post" role="form" action="{$_url}plugin/mikrotik_monitor_ui">
       <ul class="nav nav-tabs"> {foreach $routers as $r} <li role="presentation" {if $r['id']==$router}class="active" {/if}>
-          <a href="{$_url}plugin/mikrotik_ui/{$r['id']}">{$r['name']}</a>
+          <a href="{$_url}plugin/mikrotik_monitor_ui/{$r['id']}">{$r['name']}</a>
         </li> {/foreach} </ul>
     </form>
     <div class="panel">
-      <div class="table-responsive" api-get-text="{$_url}plugin/mikrotik_get_resources/{$router}">
+      <div class="table-responsive" api-get-text="{$_url}plugin/mikrotik_monitor_get_resources/{$router}">
         <center>
           <br>
           <br>
@@ -82,6 +47,7 @@
                     <th>Interface Name</th>
                     <th>Tx (bytes Out)</th>
                     <th>Rx (bytes In)</th>
+                    <th>Total Usage</th>
                     <th>Status</th>
                   </tr>
                 </thead>
@@ -120,8 +86,9 @@
                     <th>Uptime</th>
                     <th>Service</th>
                     <th>Caller ID</th>
-                    <th>RX (bytes In)</th>
-                    <th>TX (bytes Out)</th>
+                    <th>Download</th>
+                    <th>Upload</th>
+                    <th>Total Usage</th>
                   </tr>
                 </thead>
               </table>
@@ -179,7 +146,7 @@
         var $j = jQuery.noConflict(); // Use $j as an alternative to $
         function fetchData() {
           $j.ajax({
-            url: '{$_url}plugin/mikrotik_get_traffic/{$router}',
+            url: '{$_url}plugin/mikrotik_monitor_get_traffic/{$router}',
             method: 'GET',
             success: function(response) {
               // Update the DataTable with the fetched data
@@ -204,14 +171,16 @@
             }, {
               data: 'caller_id'
             }, {
-              data: 'bytes_in'
+              'data': 'tx'
             }, {
-              data: 'bytes_out'
+              'data': 'rx'
+            }, {
+              'data': 'total'
             }, ],
             // Add any additional options or configurations as needed
           });
           $j.ajax({
-            url: '{$_url}plugin/mikrotik_get_ppp_online_users/{$router}',
+            url: '{$_url}plugin/mikrotik_monitor_get_ppp_online_users/{$router}',
             method: 'GET',
             success: function(response) {
               // Update the DataTable with the fetched user list data
@@ -238,16 +207,16 @@
             }, {
               data: 'session_time'
             }, {
-              data: 'rx_bytes'
-            }, {
               data: 'tx_bytes'
+            }, {
+              data: 'rx_bytes'
             }, {
               data: 'total'
             }, ],
             // Add any additional options or configurations as needed
           });
           $j.ajax({
-            url: '{$_url}plugin/mikrotik_get_hotspot_online_users/{$router}',
+            url: '{$_url}plugin/mikrotik_monitor_get_hotspot_online_users/{$router}',
             method: 'GET',
             success: function(response) {
               // Update the DataTable with the fetched user list data
@@ -272,6 +241,8 @@
               'data': 'tx'
             }, {
               'data': 'rx'
+            }, {
+              'data': 'total'
             }, {
               'data': 'status'
             }],
@@ -316,7 +287,7 @@
             // Add any additional options or configurations as needed
           });
           $.ajax({
-            url: '{$_url}plugin/mikrotik_get_wlan/{$router}',
+            url: '{$_url}plugin/mikrotik_monitor_get_wlan/{$router}',
             method: 'GET',
             success: function(response) {
               // Update the DataTable with the fetched user list data
@@ -338,7 +309,7 @@
           txData: [],
           rxData: []
         };
-        // Function to create and update the chart
+
         // Function to create and update the chart
         function createChart() {
           var ctx = document.getElementById('chart').getContext('2d');
@@ -349,17 +320,19 @@
               datasets: [{
                 label: 'TX',
                 data: chartData.txData,
-                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                backgroundColor: 'rgba(54, 162, 235, 0.5)',
                 borderColor: 'rgba(54, 162, 235, 1)',
-                borderWidth: 1,
-                fill: true
+                borderWidth: 0,
+                tension: 0.4,
+                fill: 'start' // Use 'start' to fill the area from the starting point
               }, {
                 label: 'RX',
                 data: chartData.rxData,
-                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                backgroundColor: 'rgba(255, 99, 132, 0.5)',
                 borderColor: 'rgba(255, 99, 132, 1)',
-                borderWidth: 1,
-                fill: true
+                borderWidth: 0,
+                tension: 0.4,
+                fill: 'start' // Use 'start' to fill the area from the starting point
               }]
             },
             options: {
@@ -376,7 +349,7 @@
                   display: true,
                   title: {
                     display: true,
-                    text: 'Traffic Bytes'
+                    text: 'Live Traffic'
                   },
                   ticks: {
                     callback: function(value) {
@@ -394,6 +367,15 @@
                       return label + ': ' + formatBytes(value) + 'ps';
                     }
                   }
+                }
+              },
+              elements: {
+                point: {
+                  radius: 0, // Set the point radius to 0 to remove the dots
+                  hoverRadius: 0 // Set the hover point radius to 0 to remove the dots
+                },
+                line: {
+                  tension: 0 // Set the line tension to 0 to remove the curve
                 }
               }
             }
@@ -414,7 +396,7 @@
         function updateTrafficValues() {
           var interface = $('#interface').val(); // Get the interface value from the input field
           $.ajax({
-            url: '{$_url}plugin/mikrotik_monitor_traffic/{$router}',
+            url: '{$_url}plugin/mikrotik_monitor_traffic_update/{$router}',
             dataType: 'json',
             data: {
               interface: interface
@@ -465,6 +447,11 @@
         createChart();
         // Example usage:
         startRefresh();
-      </script> 
+      </script>
 
-      {include file="sections/footer.tpl"}
+      <script>
+        window.addEventListener('DOMContentLoaded', function() {
+          var portalLink = "https://github.com/focuslinkstech";
+          $('#version').html('MikroTik Monitor | Ver: 1.0 | by: <a href="' + portalLink + '">Focuslinks Tech</a>');
+        });
+      </script> {include file="sections/footer.tpl"}

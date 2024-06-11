@@ -1,9 +1,9 @@
 <?php
 use PEAR2\Net\RouterOS;
 
-register_menu("Router Monitor", true, "mikrotik_ui", 'AFTER_SETTINGS', 'ion ion-wifi');
+register_menu(" MikroTik Monitor", true, "mikrotik_monitor_ui", 'AFTER_SETTINGS', 'ion ion-wifi', "New", "green");
 
-function mikrotik_ui()
+function mikrotik_monitor_ui()
 {
     global $ui,$routes;
     _admin();
@@ -16,12 +16,58 @@ function mikrotik_ui()
     if(empty($router)){
         $router = $routers[0]['id'];
     }
+    $ui->assign('xheader', '<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css">
+    <style>
+     table {
+       border-collapse: collapse;
+       width: 100%;
+     }
+
+     th,
+     td {
+       border: 1px solid #ddd;
+       padding: 8px;
+       text-align: left;
+     }
+
+     th.custom-class {
+       background-color: #f2f2f2;
+       color: #000;
+       font-weight: bold;
+     }
+
+     tr.even-row {
+       background-color: #f2f2f2;
+     }
+
+     tr.custom-class {
+       color: blue;
+       font-weight: bold;
+     }
+
+     #ppp-table th,
+     #ppp-table td {
+       white-space: nowrap;
+       overflow: hidden;
+       text-overflow: ellipsis;
+       width: 100px;
+     }
+
+     .chart-canvas {
+     width: 100px;
+     height: 80px;
+   }
+   .chart-canvas {
+     width: 400px;
+     height: 200px;
+   }
+   </style>');
     $ui->assign('routers', $routers);
     $ui->assign('router', $router);
-    $ui->display('mikrotik.tpl');
+    $ui->display('mikrotik_monitor.tpl');
 }
 
-function mikrotik_get_wlan()
+function mikrotik_monitor_get_wlan()
 {
   global $routes;
   $router = $routes['2'];
@@ -61,7 +107,7 @@ function mikrotik_get_wlan()
       echo json_encode($signalList);
   }
 
-function mikrotik_get_resources()
+function mikrotik_monitor_get_resources()
 {
     global $routes;
     $router = $routes['2'];
@@ -71,7 +117,7 @@ function mikrotik_get_resources()
     $res = $client->sendSync(new RouterOS\Request('/system resource print'));
 
     // Function to round the value and append the appropriate unit
-    function mikrotik_formatSize($size)
+    function mikrotik_monitor_formatSize($size)
     {
         $units = ['B', 'KB', 'MB', 'GB'];
         $unitIndex = 0;
@@ -109,7 +155,7 @@ function mikrotik_get_resources()
     $table .= '
 	<tr>
 		<th>Mem used/free/total</th>
-		<td>'.mikrotik_formatSize($res->getProperty('total-memory') - $res->getProperty('free-memory')).' / '.mikrotik_formatSize($res->getProperty('free-memory')).' / '.mikrotik_formatSize($res->getProperty('total-memory')).'</td>
+		<td>'.mikrotik_monitor_formatSize($res->getProperty('total-memory') - $res->getProperty('free-memory')).' / '.mikrotik_monitor_formatSize($res->getProperty('free-memory')).' / '.mikrotik_monitor_formatSize($res->getProperty('total-memory')).'</td>
 		<th>CPU</th>
 		<td>'.$res->getProperty('cpu').'</td>
 		<th>CPU count/freq/load</th>
@@ -120,7 +166,7 @@ function mikrotik_get_resources()
     $table .= '
 	<tr>
 		<th>Hdd</th>
-		<td>'.mikrotik_formatSize($res->getProperty('free-hdd-space')).' / '.mikrotik_formatSize($res->getProperty('total-hdd-space')).'</td>
+		<td>'.mikrotik_monitor_formatSize($res->getProperty('free-hdd-space')).' / '.mikrotik_monitor_formatSize($res->getProperty('total-hdd-space')).'</td>
 		<th>Bad Blocks</th>
 		<td>'.$res->getProperty('bad-blocks').'</td>
 		<th>Write Total</th>
@@ -133,7 +179,7 @@ function mikrotik_get_resources()
     echo $table;
 }
 
-function mikrotik_get_traffic()
+function mikrotik_monitor_get_traffic()
 {
     global $routes;
     $router = $routes['2'];
@@ -151,14 +197,15 @@ function mikrotik_get_traffic()
 
         $txBytes = intval($interface->getProperty('tx-byte'));
         $rxBytes = intval($interface->getProperty('rx-byte'));
-
+        $name = htmlspecialchars($name, ENT_QUOTES, 'UTF-8');
         $interfaceData[] = [
             'name' => $name,
             'status' => $interface->getProperty('running') === 'true' ? '
 <small class="label bg-green">up</small>' : '
 <small class="label bg-red">down</small>',
-            'tx' => mikrotik_formatBytes($txBytes),
-            'rx' => mikrotik_formatBytes($rxBytes)
+            'tx' => mikrotik_monitor_formatBytes($txBytes),
+            'rx' => mikrotik_monitor_formatBytes($rxBytes),
+            'total' => mikrotik_monitor_formatBytes($txBytes + $rxBytes)
         ];
     }
 
@@ -167,7 +214,7 @@ function mikrotik_get_traffic()
 }
 
 // Function to format bytes into KB, MB, GB or TB
-function mikrotik_formatBytes($bytes, $precision = 2)
+function mikrotik_monitor_formatBytes($bytes, $precision = 2)
 {
     $units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
     $bytes = max($bytes, 0);
@@ -177,13 +224,28 @@ function mikrotik_formatBytes($bytes, $precision = 2)
     return round($bytes, $precision) . ' ' . $units[$pow];
 }
 
-function mikrotik_get_ppp_online_users()
+function mikrotik_monitor_get_ppp_online_users()
 {
     global $routes;
     $router = $routes['2'];
     $mikrotik = ORM::for_table('tbl_routers')->where('enabled', '1')->find_one($router);
     $client = Mikrotik::getClient($mikrotik['ip_address'], $mikrotik['username'], $mikrotik['password']);
     $pppUsers = $client->sendSync(new RouterOS\Request('/ppp/active/print'));
+
+    $interfaceTraffic = $client->sendSync(new RouterOS\Request('/interface/print'));
+    $interfaceData = [];
+    foreach ($interfaceTraffic as $interface) {
+        $name = $interface->getProperty('name');
+        // Skip interfaces with missing names
+        if (empty($name)) {
+            continue;
+        }
+
+        $interfaceData[$name] = [
+            'txBytes' => intval($interface->getProperty('tx-byte')),
+            'rxBytes' => intval($interface->getProperty('rx-byte')),
+        ];
+    }
 
     $userList = [];
     foreach ($pppUsers as $pppUser) {
@@ -192,8 +254,20 @@ function mikrotik_get_ppp_online_users()
         $uptime = $pppUser->getProperty('uptime');
         $service = $pppUser->getProperty('service');
         $callerid = $pppUser->getProperty('caller-id');
-        $bytes_in = $pppUser->getProperty('limit-bytes-in');
-        $bytes_out = $pppUser->getProperty('limit-bytes-out');
+      //$bytes_in = $pppUser->getProperty('limit-bytes-in');
+      //$bytes_out = $pppUser->getProperty('limit-bytes-out');
+
+        // Retrieve user usage based on interface name
+        $interfaceName = "<pppoe-$username>";
+
+        if (isset($interfaceData[$interfaceName])) {
+            $trafficData = $interfaceData[$interfaceName];
+            $txBytes = $trafficData['txBytes'];
+            $rxBytes = $trafficData['rxBytes'];
+        }  else {
+            $txBytes = 0;
+            $rxBytes = 0;
+        }
 
         $userList[] = [
             'username' => $username,
@@ -201,10 +275,14 @@ function mikrotik_get_ppp_online_users()
             'uptime' => $uptime,
             'service' => $service,
             'caller_id' => $callerid,
-            'bytes_in' => $bytes_in,
-            'bytes_out' => $bytes_out,
+          //  'bytes_in' => $bytes_in,
+          //  'bytes_out' => $bytes_out,
+            'tx' => mikrotik_monitor_formatBytes($txBytes),
+            'rx' => mikrotik_monitor_formatBytes($rxBytes),
+            'total' => mikrotik_monitor_formatBytes($txBytes + $rxBytes),
         ];
     }
+  //  var_dump(isset($interfaceData[$interfaceName]));
 
     // Return the PPP online user list as JSON
     header('Content-Type: application/json');
@@ -213,8 +291,7 @@ function mikrotik_get_ppp_online_users()
 
 
 
-
-function mikrotik_get_hotspot_online_users()
+function mikrotik_monitor_get_hotspot_online_users()
 {
     global $routes;
     $router = $routes['2'];
@@ -240,9 +317,9 @@ function mikrotik_get_hotspot_online_users()
             'server' => $server,
             'mac' => $mac,
             'session_time' => $sessionTime,
-            'rx_bytes' => mikrotik_formatBytes($rxBytes),
-            'tx_bytes' => mikrotik_formatBytes($txBytes),
-            'total' => mikrotik_formatBytes($txBytes + $rxBytes),
+            'rx_bytes' => mikrotik_monitor_formatBytes($rxBytes),
+            'tx_bytes' => mikrotik_monitor_formatBytes($txBytes),
+            'total' => mikrotik_monitor_formatBytes($txBytes + $rxBytes),
         ];
     }
 
@@ -252,7 +329,7 @@ function mikrotik_get_hotspot_online_users()
 
 }
 
-function mikrotik_disconnect_online_user($router, $username, $userType)
+function mikrotik_monitor_disconnect_online_user($router, $username, $userType)
 {
   // Check if the form was submitted
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -292,7 +369,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   }
 }
 
-function mikrotik_monitor_traffic()
+function mikrotik_monitor_traffic_update()
 {
     $interface  = $_GET["interface"];
     global $routes;

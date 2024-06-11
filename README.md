@@ -22,8 +22,8 @@
 
 ## Installation
 
-Copy **mikrotik.php** to folder **system/plugin/**
+Copy **mikrotik_monitor.php** to folder **system/plugin/**
 
-Copy **ui/mikrotik.tpl** to folder **system/plugin/ui/**
+Copy **ui/mikrotik_monitor.tpl** to folder **system/plugin/ui/**
 
 
