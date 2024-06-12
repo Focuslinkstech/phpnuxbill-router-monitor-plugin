@@ -20,7 +20,8 @@
 
 
 New Dashboard Ui
-![image](https://github.com/Focuslinkstech/phpnuxbill-router-monitor-plugin/assets/22675011/091dd6dc-4855-4a2f-8921-16bbdf94eb71)
+![image](https://github.com/Focuslinkstech/phpnuxbill-router-monitor-plugin/assets/22675011/899ae872-4949-42d9-beb4-b44d0abd1915)
+
 
 ## Installation
 
