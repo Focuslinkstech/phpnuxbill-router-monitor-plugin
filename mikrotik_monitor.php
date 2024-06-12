@@ -129,53 +129,157 @@ function mikrotik_monitor_get_resources()
     }
 
     $table = '
-<table class="table table-condensed table-bordered">';
-    $table .= '
-	<tr>
-		<th>Platform</th>
-		<td>'.$res->getProperty('platform').'</td>
-		<th>Board</th>
-		<td>'.$res->getProperty('board-name').'</td>
-		<th>Arch</th>
-		<td>'.$res->getProperty('architecture-name').'</td>
-		<th>Version</th>
-		<td>'.$res->getProperty('version').'</td>
-	</tr>';
-    $table .= '
-	<tr>
-		<th>Uptime</th>
-		<td>'.$res->getProperty('uptime').'</td>
-		<th>Build time</th>
-		<td>'.$res->getProperty('build-time').'</td>
-		<th>Factory Software</th>
-		<td>'.$res->getProperty('factory-software').'</td>
-		<th>Volt</th>
-		<td>'.$health->getProperty('voltage').'</td>
-	</tr>';
-    $table .= '
-	<tr>
-		<th>Mem used/free/total</th>
-		<td>'.mikrotik_monitor_formatSize($res->getProperty('total-memory') - $res->getProperty('free-memory')).' / '.mikrotik_monitor_formatSize($res->getProperty('free-memory')).' / '.mikrotik_monitor_formatSize($res->getProperty('total-memory')).'</td>
-		<th>CPU</th>
-		<td>'.$res->getProperty('cpu').'</td>
-		<th>CPU count/freq/load</th>
-		<td>'.$res->getProperty('cpu-count').'/'.$res->getProperty('cpu-frequency').'/'.$res->getProperty('cpu-load').'</td>
-		<th>Temp</th>
-		<td>'.$health->getProperty('temperature').'</td>
-	</tr>';
-    $table .= '
-	<tr>
-		<th>Hdd</th>
-		<td>'.mikrotik_monitor_formatSize($res->getProperty('free-hdd-space')).' / '.mikrotik_monitor_formatSize($res->getProperty('total-hdd-space')).'</td>
-		<th>Bad Blocks</th>
-		<td>'.$res->getProperty('bad-blocks').'</td>
-		<th>Write Total</th>
-		<td>'.$res->getProperty('write-sect-total').'</td>
-		<th>Write Since Reboot</th>
-		<td>'.$res->getProperty('write-sect-since-reboot').'</td>
-	</tr>';
-    $table .= '
-</table>';
+    <style>
+        .column-card-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+    
+        .column-card {
+            flex-basis: calc(50% - 20px); /* Dua kartu per baris di layar kecil */
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+    
+        .column-card-header {
+            background-color: #009879;
+            color: #fff;
+            padding: 10px;
+            border-radius: 5px 5px 0 0;
+        }
+    
+        .column-card-content {
+            padding: 15px;
+        }
+    
+        .column-card-content table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+    
+        .column-card-content th,
+        .column-card-content td {
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+        }
+    
+        .column-card-content th {
+            text-align: left;
+            background-color: #f2f2f2;
+        }
+    
+        .column-card-content td {
+            text-align: right;
+        }
+    
+        @media only screen and (max-width: 768px) {
+            .column-card {
+                flex-basis: calc(100% - 20px); /* Satu kartu per baris di layar kecil */
+            }
+        }
+        @media only screen and (min-width: 769px) {
+        .column-card {
+            flex-basis: calc(33.33% - 20px); /* Tiga kartu per baris di layar desktop */
+        }
+    }
+    </style>
+    
+    <div class="column-card-container">
+        <div class="column-card">
+            <div class="column-card-header">Platform Information</div>
+            <div class="column-card-content">
+                <table>
+                    <tbody>
+                        <tr>
+                            <th>Platform</th>
+                            <td>'.$res->getProperty('platform').'</td>
+                        </tr>
+                        <tr>
+                            <th>Board</th>
+                            <td>'.$res->getProperty('board-name').'</td>
+                        </tr>
+                        <tr>
+                            <th>Arch</th>
+                            <td>'.$res->getProperty('architecture-name').'</td>
+                        </tr>
+                        <tr>
+                            <th>Version</th>
+                            <td>'.$res->getProperty('version').'</td>
+                        </tr>
+                        <tr>
+                            <th>Mem used/free</th>
+                            <td>'.mikrotik_monitor_formatSize($res->getProperty('total-memory') - $res->getProperty('free-memory')).' / '.mikrotik_monitor_formatSize($res->getProperty('free-memory')).'</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    
+        <div class="column-card">
+            <div class="column-card-header">System Information</div>
+            <div class="column-card-content">
+                <table>
+                    <tbody>
+                        <tr>
+                            <th>Uptime</th>
+                            <td>'.$res->getProperty('uptime').'</td>
+                        </tr>
+                        <tr>
+                            <th>Build time</th>
+                            <td>'.$res->getProperty('build-time').'</td>
+                        </tr>
+                        <tr>
+                            <th>Factory Software</th>
+                            <td>'.$res->getProperty('factory-software').'</td>
+                        </tr>
+                        <tr>
+                            <th>Free Hdd Space</th>
+                            <td>'.mikrotik_monitor_formatSize($res->getProperty('free-hdd-space')).'</td>
+                        </tr>
+                        <tr>
+                            <th>Total Memory</th>
+                            <td> '.mikrotik_monitor_formatSize($res->getProperty('total-memory')).'</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    
+        <div class="column-card">
+            <div class="column-card-header">Hardware Information</div>
+            <div class="column-card-content">
+                <table>
+                    <tbody>
+                        <tr>
+                            <th>CPU</th>
+                            <td>'.$res->getProperty('cpu').'</td>
+                        </tr>
+                        <tr>
+                            <th>CPU count/freq/load</th>
+                            <td>'.$res->getProperty('cpu-count').'/'.$res->getProperty('cpu-frequency').'/'.$res->getProperty('cpu-load').'</td>
+                        </tr>
+                        <tr>
+                            <th>Hdd</th>
+                            <td>'.mikrotik_monitor_formatSize($res->getProperty('free-hdd-space')).' / '.mikrotik_monitor_formatSize($res->getProperty('total-hdd-space')).'</td>
+                        </tr>
+                        <tr>
+                            <th>Write Total</th>
+                            <td>'.$res->getProperty('write-sect-total').'</td>
+                        </tr>
+                        <tr>
+                            <th>Write Since Reboot</th>
+                            <td>'.$res->getProperty('write-sect-since-reboot').'</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>';
     echo $table;
 }
 
