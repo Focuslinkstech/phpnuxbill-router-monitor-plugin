@@ -129,53 +129,228 @@ function mikrotik_monitor_get_resources()
     }
 
     $table = '
-<table class="table table-condensed table-bordered">';
-    $table .= '
-	<tr>
-		<th>Platform</th>
-		<td>'.$res->getProperty('platform').'</td>
-		<th>Board</th>
-		<td>'.$res->getProperty('board-name').'</td>
-		<th>Arch</th>
-		<td>'.$res->getProperty('architecture-name').'</td>
-		<th>Version</th>
-		<td>'.$res->getProperty('version').'</td>
-	</tr>';
-    $table .= '
-	<tr>
-		<th>Uptime</th>
-		<td>'.$res->getProperty('uptime').'</td>
-		<th>Build time</th>
-		<td>'.$res->getProperty('build-time').'</td>
-		<th>Factory Software</th>
-		<td>'.$res->getProperty('factory-software').'</td>
-		<th>Volt</th>
-		<td>'.$health->getProperty('voltage').'</td>
-	</tr>';
-    $table .= '
-	<tr>
-		<th>Mem used/free/total</th>
-		<td>'.mikrotik_monitor_formatSize($res->getProperty('total-memory') - $res->getProperty('free-memory')).' / '.mikrotik_monitor_formatSize($res->getProperty('free-memory')).' / '.mikrotik_monitor_formatSize($res->getProperty('total-memory')).'</td>
-		<th>CPU</th>
-		<td>'.$res->getProperty('cpu').'</td>
-		<th>CPU count/freq/load</th>
-		<td>'.$res->getProperty('cpu-count').'/'.$res->getProperty('cpu-frequency').'/'.$res->getProperty('cpu-load').'</td>
-		<th>Temp</th>
-		<td>'.$health->getProperty('temperature').'</td>
-	</tr>';
-    $table .= '
-	<tr>
-		<th>Hdd</th>
-		<td>'.mikrotik_monitor_formatSize($res->getProperty('free-hdd-space')).' / '.mikrotik_monitor_formatSize($res->getProperty('total-hdd-space')).'</td>
-		<th>Bad Blocks</th>
-		<td>'.$res->getProperty('bad-blocks').'</td>
-		<th>Write Total</th>
-		<td>'.$res->getProperty('write-sect-total').'</td>
-		<th>Write Since Reboot</th>
-		<td>'.$res->getProperty('write-sect-since-reboot').'</td>
-	</tr>';
-    $table .= '
-</table>';
+<style>
+    .column-card-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        margin-top: 20px;
+    }
+
+    .column-card {
+        flex-basis: calc(50% - 20px); /* Dua kartu per baris di layar kecil */
+        background-color: #fff;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+
+    .column-card-header {
+        background-color: #009879;
+        color: #fff;
+        padding: 10px;
+        border-radius: 5px 5px 0 0;
+    }
+
+    .column-card-content {
+        padding: 15px;
+    }
+
+    .column-card-content table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .column-card-content th,
+    .column-card-content td {
+        padding: 8px;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .column-card-content th {
+        text-align: left;
+        background-color: #f2f2f2;
+    }
+
+    .column-card-content td {
+        text-align: right;
+    }
+
+    @media only screen and (max-width: 768px) {
+        .column-card {
+            flex-basis: calc(100% - 20px); /* Satu kartu per baris di layar kecil */
+        }
+    }
+
+    @media only screen and (min-width: 769px) {
+        .column-card {
+            flex-basis: calc(33.33% - 20px); /* Tiga kartu per baris di layar desktop */
+        }
+    }
+    /* Progress Bar Style */
+    .column-card-header_progres {
+        background-color: #009879;
+        color: #fff;
+        padding: 10px;
+        border-radius: 5px 5px 0 0;
+        font-size: 14px; /* Mengatur ukuran font lebih kecil */
+    }
+
+    /* Styles lainnya */
+    .progress {
+        margin-top: 5px;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        width: 100%;
+    }
+
+    .progress-bar {
+        background-color: rgb(192, 192, 192);
+        height: 20px;
+        border-radius: 10px;
+        margin-bottom: 5px;
+        width: 100%;
+        position: relative;
+    }
+
+    .progress-bar-container {
+        background-color: rgb(116, 194, 92);
+        color: white;
+        padding: 0.25%;
+        text-align: right;
+        font-size: 14px;
+        border-radius: 10px;
+        width: 100%;
+    }
+
+    .progress-value {
+        position: absolute;
+        top: 0;
+        right: 5px;
+        transform: translateY(-50%);
+        color: white;
+        font-weight: bold;
+    }
+</style>
+
+<div class="column-card-container">
+    <div class="column-card">
+        <div class="column-card-header">Platform Information</div>
+        <div class="column-card-content">
+            <table>
+                <tbody>
+                    <tr>
+                        <th>Platform</th>
+                        <td>'.$res->getProperty('platform').'</td>
+                    </tr>
+                    <tr>
+                        <th>Board</th>
+                        <td>'.$res->getProperty('board-name').'</td>
+                    </tr>
+                    <tr>
+                        <th>Arch</th>
+                        <td>'.$res->getProperty('architecture-name').'</td>
+                    </tr>
+                    <tr>
+                        <th>Version</th>
+                        <td>'.$res->getProperty('version').'</td>
+                    </tr>
+                    <tr>
+                        <th>Mem used/free</th>
+                        <td>'.mikrotik_monitor_formatSize($res->getProperty('total-memory') - $res->getProperty('free-memory')).' / '.mikrotik_monitor_formatSize($res->getProperty('free-memory')).'</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="column-card">
+        <div class="column-card-header">System Information</div>
+        <div class="column-card-content">
+            <table>
+                <tbody>
+                    <tr>
+                        <th>Uptime</th>
+                        <td>'.$res->getProperty('uptime').'</td>
+                    </tr>
+                    <tr>
+                        <th>Build time</th>
+                        <td>'.$res->getProperty('build-time').'</td>
+                    </tr>
+                    <tr>
+                        <th>Factory Software</th>
+                        <td>'.$res->getProperty('factory-software').'</td>
+                    </tr>
+                    <tr>
+                        <th>Free Hdd Space</th>
+                        <td>'.mikrotik_monitor_formatSize($res->getProperty('free-hdd-space')).'</td>
+                    </tr>
+                    <tr>
+                        <th>Total Memory</th>
+                        <td>'.mikrotik_monitor_formatSize($res->getProperty('total-memory')).'</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="column-card">
+        <div class="column-card-header">Hardware Information</div>
+        <div class="column-card-content">
+            <table>
+                <tbody>
+                    <tr>
+                        <th>CPU</th>
+                        <td>'.$res->getProperty('cpu').'</td>
+                    </tr>
+                    <tr>
+                        <th>CPU count/freq/load</th>
+                        <td>'.$res->getProperty('cpu-count').'/'.$res->getProperty('cpu-frequency').'/'.$res->getProperty('cpu-load').'</td>
+                    </tr>
+                    <tr>
+                        <th>Hdd</th>
+                        <td>'.mikrotik_monitor_formatSize($res->getProperty('free-hdd-space')).' / '.mikrotik_monitor_formatSize($res->getProperty('total-hdd-space')).'</td>
+                    </tr>
+                    <tr>
+                        <th>Write Total</th>
+                        <td>'.$res->getProperty('write-sect-total').'</td>
+                    </tr>
+                    <tr>
+                        <th>Write Since Reboot</th>
+                        <td>'.$res->getProperty('write-sect-since-reboot').'</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<!-- Progress Bars -->
+<div class="column-card-container" id="progress-bars">
+    <!-- CPU Load Progress Bar -->
+    <div class="column-card">
+        <div class="column-card-header_progres">CPU Load</div>
+        <div class="progress" style="height: 20px;">
+            <div class="progress-bar bg-success progress-animated" role="progressbar" style="width: '.$res->getProperty('cpu-load').'%; background-color: #5cb85c">'.$res->getProperty('cpu-load').'%</div>
+        </div>
+    </div>
+    <!-- Temperature Progress Bar -->
+    <div class="column-card">
+        <div class="column-card-header_progres">Temperature</div>
+        <div class="progress" style="height: 20px;">
+            <div class="progress-bar bg-info progress-animated" role="progressbar" style="width: '.$health->getProperty('temperature').'%; background-color: #5cb85c">'.$health->getProperty('temperature').'°C</div>
+        </div>
+    </div>
+    <!-- Voltage Progress Bar -->
+    <div class="column-card">
+        <div class="column-card-header_progres">Voltage</div>
+        <div class="progress" style="height: 20px;">
+            <div class="progress-bar bg-primary progress-animated" role="progressbar" style="width: '.$health->getProperty('voltage').'%; background-color: #5cb85c">'.$health->getProperty('voltage').' V</div>
+        </div>
+    </div>
+</div>
+<!-- End of Progress Bars -->';
     echo $table;
 }
 
