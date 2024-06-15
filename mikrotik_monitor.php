@@ -16,54 +16,107 @@ function mikrotik_monitor_ui()
     if(empty($router)){
         $router = $routers[0]['id'];
     }
-    $ui->assign('xheader', '<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css">
+    $ui->assign('xheader', '
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/dataTables.bootstrap5.min.css">
+    <script type="text/javascript" src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.11.3/js/dataTables.bootstrap5.min.js"></script>
     <style>
-     table {
-       border-collapse: collapse;
-       width: 100%;
-     }
-
-     th,
-     td {
-       border: 1px solid #ddd;
-       padding: 8px;
-       text-align: left;
-     }
-
-     th.custom-class {
-       background-color: #f2f2f2;
-       color: #000;
-       font-weight: bold;
-     }
-
-     tr.even-row {
-       background-color: #f2f2f2;
-     }
-
-     tr.custom-class {
-       color: blue;
-       font-weight: bold;
-     }
-
-     #ppp-table th,
-     #ppp-table td {
-       white-space: nowrap;
-       overflow: hidden;
-       text-overflow: ellipsis;
-       width: 100px;
-     }
-
-     .chart-canvas {
-     width: 100px;
-     height: 80px;
-   }
-   .chart-canvas {
-     width: 400px;
-     height: 200px;
-   }
-   </style>');
+        .card-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .card {
+            flex: 1 1 calc(33.333% - 1rem);
+            margin-bottom: 1rem;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .card-header-bg-info {
+            background-color: #0d6efd; /* Bootstrap primary color */
+            color: #fff;
+            padding: 15px;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+        }
+        .card-header-bg-success {
+            background-color: #009174; /* Bootstrap primary color */
+            color: #fff;
+            padding: 15px;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+        }
+        .card-header-bg-warning {
+            background-color: #d0d414; /* Bootstrap primary color */
+            color: #fff;
+            padding: 15px;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+        }
+        .card-header-bg-danger {
+            background-color: #12b9bd; /* Bootstrap primary color */
+            color: #fff;
+            padding: 15px;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+        }
+        .card-body {
+            padding: 15px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th,
+        td {
+            padding: 8px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th.custom-class {
+            background-color: #f2f2f2;
+            color: #000;
+            font-weight: bold;
+        }
+        tr.even-row {
+            background-color: #f2f2f2;
+        }
+        tr.custom-class {
+            color: blue;
+            font-weight: bold;
+        }
+        #ppp-table th,
+        #ppp-table td {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100px;
+        }
+        .chart-canvas {
+            width: 100px;
+            height: 80px;
+        }
+        @media only screen and (max-width: 768px) {
+            .card {
+                flex: 1 1 calc(100% - 1rem);
+            }
+        }
+        @media only screen and (min-width: 769px) {
+            .card {
+                flex: 1 1 calc(33.333% - 1rem);
+            }
+        }
+    </style>');
     $ui->assign('routers', $routers);
     $ui->assign('router', $router);
+    $interfaces = get_interfaces_list();
+    $ui->assign('interfaces', $interfaces);
     $ui->display('mikrotik_monitor.tpl');
 }
 
@@ -115,7 +168,6 @@ function mikrotik_monitor_get_resources()
     $client = Mikrotik::getClient($mikrotik['ip_address'], $mikrotik['username'], $mikrotik['password']);
     $health = $client->sendSync(new RouterOS\Request('/system health print'));
     $res = $client->sendSync(new RouterOS\Request('/system resource print'));
-
     // Function to round the value and append the appropriate unit
     function mikrotik_monitor_formatSize($size)
     {
@@ -127,6 +179,7 @@ function mikrotik_monitor_get_resources()
         }
         return round($size, 2) . ' ' . $units[$unitIndex];
     }
+
 
     $table = '
 <style>
@@ -295,7 +348,6 @@ function mikrotik_monitor_get_resources()
             </table>
         </div>
     </div>
-
     <div class="column-card">
         <div class="column-card-header">Hardware Information</div>
         <div class="column-card-content">
@@ -326,32 +378,27 @@ function mikrotik_monitor_get_resources()
         </div>
     </div>
 </div>
-<!-- Progress Bars -->
-<div class="column-card-container" id="progress-bars">
-    <!-- CPU Load Progress Bar -->
-    <div class="column-card">
-        <div class="column-card-header_progres">CPU Load</div>
-        <div class="progress" style="height: 20px;">
-            <div class="progress-bar bg-success progress-animated" role="progressbar" style="width: '.$res->getProperty('cpu-load').'%; background-color: #5cb85c">'.$res->getProperty('cpu-load').'%</div>
-        </div>
-    </div>
-    <!-- Temperature Progress Bar -->
-    <div class="column-card">
-        <div class="column-card-header_progres">Temperature</div>
-        <div class="progress" style="height: 20px;">
-            <div class="progress-bar bg-info progress-animated" role="progressbar" style="width: '.$health->getProperty('temperature').'%; background-color: #5cb85c">'.$health->getProperty('temperature').'°C</div>
-        </div>
-    </div>
-    <!-- Voltage Progress Bar -->
-    <div class="column-card">
-        <div class="column-card-header_progres">Voltage</div>
-        <div class="progress" style="height: 20px;">
-            <div class="progress-bar bg-primary progress-animated" role="progressbar" style="width: '.$health->getProperty('voltage').'%; background-color: #5cb85c">'.$health->getProperty('voltage').' V</div>
-        </div>
-    </div>
-</div>
-<!-- End of Progress Bars -->';
+';
     echo $table;
+}
+
+function get_interfaces_list() {
+    global $routes;
+    $router = $routes['2'];
+    $mikrotik = ORM::for_table('tbl_routers')->where('enabled', '1')->find_one($router);
+    $client = Mikrotik::getClient($mikrotik['ip_address'], $mikrotik['username'], $mikrotik['password']);
+    $interfaces = $client->sendSync(new RouterOS\Request('/interface/print'));
+
+    $interfaceList = [];
+    foreach ($interfaces as $interface) {
+        $name = $interface->getProperty('name');
+        if (!empty($name)) {
+            // Escape HTML characters
+            $safeName = htmlspecialchars($name, ENT_QUOTES, 'UTF-8');
+            $interfaceList[] = $safeName;
+        }
+    }
+    return $interfaceList;
 }
 
 function mikrotik_monitor_get_traffic()
@@ -586,4 +633,22 @@ function mikrotik_monitor_traffic_update()
     // Return the result as JSON
     header('Content-Type: application/json');
     echo json_encode($result);
+}
+
+function mikrotik_monitor_get_resources_json() {
+    global $routes;
+    $router = $routes['2'];
+    $mikrotik = ORM::for_table('tbl_routers')->where('enabled', '1')->find_one($router);
+    $client = Mikrotik::getClient($mikrotik['ip_address'], $mikrotik['username'], $mikrotik['password']);
+    $health = $client->sendSync(new RouterOS\Request('/system health print'));
+    $res = $client->sendSync(new RouterOS\Request('/system resource print'));
+
+    $data = [
+        'cpu_load' => $res->getProperty('cpu-load') ?? 'N/A',
+        'temperature' => $health->getProperty('temperature') ?? 'N/A',
+        'voltage' => $health->getProperty('voltage') ?? 'N/A'
+    ];
+
+    header('Content-Type: application/json');
+    echo json_encode($data);
 }
