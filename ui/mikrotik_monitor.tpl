@@ -17,7 +17,32 @@
           <br>
         </center>
       </div>
-      <div class="panel-body"></div>
+<!-- Progress Bars -->
+<div class="column-card-container" id="progress-bars">
+    <!-- CPU Load Progress Bar -->
+    <div class="column-card" id="cpu-load-bar">
+        <div class="column-card-header_progres">CPU Load</div>
+        <div class="progress" style="height: 20px;">
+            <div class="progress-bar bg-success progress-animated" role="progressbar" style="width: 0%; background-color: #5cb85c">0%</div>
+        </div>
+    </div>
+    <!-- Temperature Progress Bar -->
+    <div class="column-card" id="temperature-bar">
+        <div class="column-card-header_progres">Temperature</div>
+        <div class="progress" style="height: 20px;">
+            <div class="progress-bar bg-info progress-animated" role="progressbar" style="width: 0%; background-color: #5cb85c">0°C</div>
+        </div>
+    </div>
+    <!-- Voltage Progress Bar -->
+    <div class="column-card" id="voltage-bar">
+        <div class="column-card-header_progres">Voltage</div>
+        <div class="progress" style="height: 20px;">
+            <div class="progress-bar bg-primary progress-animated" role="progressbar" style="width: 0%; background-color: #5cb85c">0 V</div>
+        </div>
+    </div>
+</div>
+<!-- End of Progress Bars -->
+
     </div>
     <div class="table-responsive">
       <div class="nav-tabs-custom">
@@ -124,7 +149,11 @@
                   </tr>
                   <tr>
                     <td>
-                      <input name="interface" id="interface" type="text" value="ether1" />
+                      <select name="interface" id="interface">
+                        {foreach from=$interfaces item=interface}
+                          <option value="{$interface}">{$interface}</option>
+                        {/foreach}
+                      </select>
                     </td>
                     <td>
                       <div id="tabletx"></div>
@@ -138,8 +167,41 @@
               </div>
             </div>
           </div>
+          </div>
         </div>
       </div>
+      <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+      <script>
+          var $j = jQuery.noConflict(); // Use $j as an alternative to $
+          
+          // Function to fetch data from server
+          function fetchData() {
+              $j.ajax({
+                  url: '{$_url}plugin/mikrotik_monitor_get_resources_json{$routes}', // Ganti dengan URL yang sesuai untuk mendapatkan data real-time
+                  method: 'GET',
+                  dataType: 'json', // Jika server mengembalikan data dalam format JSON
+                  success: function(data) {
+                      // Update CPU Load progress bar
+                      $j('#cpu-load-bar .progress-bar').css('width', data.cpu_load + '%').text(data.cpu_load + '%');
+                      
+                      // Update Temperature progress bar
+                      $j('#temperature-bar .progress-bar').css('width', data.temperature + '%').text(data.temperature + '°C');
+                      
+                      // Update Voltage progress bar
+                      $j('#voltage-bar .progress-bar').css('width', data.voltage + '%').text(data.voltage + ' V');
+                  },
+                  error: function(xhr, status, error) {
+                      console.error('AJAX Error:', error);
+                  }
+              });
+          }
+          
+          // Call fetchData initially
+          fetchData();
+          
+          // Polling fetchData every 5 seconds (5000 milliseconds)
+          setInterval(fetchData, 2000); // Ubah interval sesuai dengan kebutuhan Anda
+      </script>
       <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
       <script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
       <script>
@@ -437,7 +499,7 @@
         }
         // Function to refresh the values every 1 second
         function startRefresh() {
-          setInterval(updateTrafficValues, 1000); // Refresh every 1 second (1000 milliseconds)
+          setInterval(updateTrafficValues, 2000); // Refresh every 1 second (1000 milliseconds)
         }
         // Event listener for the interface input field
         $('#interface').on('input', function() {
@@ -448,10 +510,11 @@
         // Example usage:
         startRefresh();
       </script>
-
       <script>
         window.addEventListener('DOMContentLoaded', function() {
           var portalLink = "https://github.com/focuslinkstech";
           $('#version').html('MikroTik Monitor | Ver: 1.0 | by: <a href="' + portalLink + '">Focuslinks Tech</a>');
         });
-      </script> {include file="sections/footer.tpl"}
+      </script>
+      
+{include file="sections/footer.tpl"}
