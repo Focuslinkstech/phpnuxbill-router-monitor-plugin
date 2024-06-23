@@ -113,7 +113,7 @@ function mikrotik_monitor_ui()
     </style>');
     $ui->assign('routers', $routers);
     $ui->assign('router', $router);
-    $interfaces = get_interfaces_list();
+    $interfaces = mikrotik_monitor_get_interfaces_list();
     $ui->assign('interfaces', $interfaces);
     $ui->display('mikrotik_monitor.tpl');
 }
@@ -380,7 +380,7 @@ function mikrotik_monitor_get_resources()
     echo $table;
 }
 
-function get_interfaces_list() {
+function mikrotik_monitor_get_interfaces_list() {
     global $routes;
     $router = $routes['2'];
     $mikrotik = ORM::for_table('tbl_routers')->where('enabled', '1')->find_one($router);
