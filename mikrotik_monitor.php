@@ -1,5 +1,8 @@
 <?php
 use PEAR2\Net\RouterOS;
+use PEAR2\Net\RouterOS\Client;
+use PEAR2\Net\RouterOS\Request;
+
 
 register_menu(" MikroTik Monitor", true, "mikrotik_monitor_ui", 'AFTER_SETTINGS', 'ion ion-wifi', "New", "green");
 
@@ -111,6 +114,9 @@ function mikrotik_monitor_ui()
             }
         }
     </style>');
+    //$routerId = $routes['2'] ?? ($routers ? $routers[0]['id'] : null); // Memastikan ada router yang aktif
+    $logs = mikrotik_monitor_fetchLogs($router); // Mengambil log dari router yang dipilih
+    $ui->assign('logs', $logs);
     $ui->assign('routers', $routers);
     $ui->assign('router', $router);
     $interfaces = mikrotik_monitor_get_interfaces_list();
@@ -649,4 +655,27 @@ function mikrotik_monitor_get_resources_json() {
 
     header('Content-Type: application/json');
     echo json_encode($data);
+}
+
+// Fungsi untuk mengambil logs dari MikroTik
+function mikrotik_monitor_fetchLogs($routerId) {
+    if (!$routerId) {
+        return []; // Mengembalikan array kosong jika router tidak tersedia
+    }
+    
+    $mikrotik = ORM::for_table('tbl_routers')->where('enabled', '1')->find_one($routerId);
+    if (!$mikrotik) {
+        return []; // Mengembalikan array kosong jika router tidak ditemukan
+    }
+    
+    $client = Mikrotik::getClient($mikrotik['ip_address'], $mikrotik['username'], $mikrotik['password']);
+    $request = new Request('/log/print');
+    $response = $client->sendSync($request);
+    
+    $logs = [];
+    foreach ($response as $entry) {
+        $logs[] = $entry->getIterator()->getArrayCopy(); // Mengumpulkan data dari setiap entry
+    }
+    
+    return $logs;
 }
