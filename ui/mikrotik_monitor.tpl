@@ -8,10 +8,15 @@ body {
 
 .container {
     margin-top: 20px;
-    background-color: #fff;
+    background-color: #d8dfe5;
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     padding: 20px;
+    max-width: 98%;
+    overflow-x: auto;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
 }
 
 /* Styles for table and pagination */
