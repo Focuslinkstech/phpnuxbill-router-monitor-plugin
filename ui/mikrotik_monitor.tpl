@@ -116,6 +116,12 @@
     .badge:hover {
         opacity: 0.8;
     }
+
+    @media screen and (max-width: 600px) {
+        .container {
+            overflow-x: auto;
+        }
+    }
 </style>
 <div class="box-body table-responsive no-padding">
     <div class="col-sm-12 col-md-12">
@@ -188,7 +194,7 @@
                     </li>
                 </ul>
                 <div class="tab-content">
-                    <div style="overflow-x:auto;" class="tab-pane" id="tab_1">
+                    <div class="tab-pane" id="tab_1">
                         <div class="box-body no-padding" id="">
                             <div class="table-responsive">
                                 <div id="logsys-mikrotik" class="container">
@@ -211,7 +217,7 @@
                     </div>
 
                     <!-- /.tab-pane -->
-                    <div style="overflow-x:auto;" class="tab-pane" id="tab_2">
+                    <div class="tab-pane" id="tab_2">
                         <div class="box-body no-padding" id="">
                             <div class="table-responsive">
                                 <div id="logsys-mikrotik" class="container">
@@ -262,7 +268,7 @@
                             </div>
                         </div>
                     </div>
-                    <div style="overflow-x:auto;" class="tab-pane" id="tab_4">
+                    <div class="tab-pane" id="tab_4">
                         <div class="box-body no-padding" id="">
                             <div class="table-responsive">
                                 <div id="logsys-mikrotik" class="container">
@@ -288,7 +294,7 @@
                         </div>
                     </div>
 
-                    <div style="overflow-x:auto;" class="tab-pane" id="tab_5">
+                    <div class="tab-pane" id="tab_5">
                         <div class="box-body no-padding" id="">
                             <div class="table-responsive">
                                 <div id="logsys-mikrotik" class="container">
@@ -322,7 +328,7 @@
                             </div>
                         </div>
                     </div>
-                    <div style="overflow-x:auto;" class="tab-pane" id="tab_6">
+                    <div class="tab-pane" id="tab_6">
                         <div class="box-body no-padding" id="">
                             <div class="table-responsive">
                                 <div id="logsys-mikrotik" class="container">
@@ -657,7 +663,7 @@
             <script>
                 window.addEventListener('DOMContentLoaded', function () {
                     var portalLink = "https://github.com/focuslinkstech";
-                    $('#version').html('MikroTik Monitor | Ver: 3.5 | by: <a href="' + portalLink + '">Focuslinks Tech</a>');
+                    $('#version').html('MikroTik Monitor | Ver: 3.0 | by: <a href="' + portalLink + '">Focuslinks Tech</a>');
                 });
 
                 function updatePerPage(value) {
