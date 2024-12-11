@@ -342,30 +342,7 @@
                                                 </tr>
                                             </thead>
                                             <tbody id="logTableBody">
-                                                {foreach from=$logs|array_reverse item=log name=logLoop}
-                                                <tr class="log-entry">
-                                                    <td>{$log.time}</td>
-                                                    <td>{$log.topics}</td>
-                                                    <td class="log-message">
-                                                        {if $log.message|lower|strpos:'failed' !== false}
-                                                        <span class="badge badge-danger">{Lang::T('Error')}</span>
-                                                        {elseif $log.message|lower|strpos:'trying' !==
-                                                        false}
-                                                        <span class="badge badge-warning">{Lang::T('Warning')}</span>
-                                                        {elseif $log.message|lower|strpos:'logged in' !==
-                                                        false}
-                                                        <span class="badge badge-success">{Lang::T('Success')}</span>
-                                                        {elseif $log.message|lower|strpos:'login failed' !==
-                                                        false}
-                                                        <span class="badge badge-info">{Lang::T('Login
-                                                            Info')}</span>
-                                                        {else}
-                                                        <span class="badge badge-info">{Lang::T('Info')}</span>
-                                                        {/if}
-                                                        {$log.message}
-                                                    </td>
-                                                </tr>
-                                                {/foreach}
+                                                <!-- Table rows will be populated here -->
                                             </tbody>
                                         </table>
                                     </div>
@@ -379,16 +356,7 @@
             <script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
             <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
             <script>
-                var $j = jQuery.noConflict();
 
-                $j(document).ready(function () {
-                    $j('#logTable').DataTable({
-                        "pagingType": "full_numbers",
-                        "order": [
-                            [0, 'desc']
-                        ]
-                    });
-                });
             </script>
             <script>
                 var $j = jQuery.noConflict(); // Use $j as an alternative to $
@@ -651,6 +619,7 @@
                         .then(fetchUserListData)
                         .then(fetchHotspotListData)
                         .then(fetchSignalListData)
+                        .then(fetchLogs)
                         .then(function () {
                             createChart();
                             startRefresh();
@@ -665,27 +634,88 @@
                     var portalLink = "https://github.com/focuslinkstech";
                     $('#version').html('MikroTik Monitor | Ver: 3.0 | by: <a href="' + portalLink + '">Focuslinks Tech</a>');
                 });
+            </script>
 
-                function updatePerPage(value) {
-                    var urlParams = new URLSearchParams(window.location.search);
-                    urlParams.set('per_page', value);
-                    urlParams.set('page', 1); // Reset to first page
-                    window.location.search = urlParams.toString();
-                }
+            <script>
+                var $j = jQuery.noConflict();
 
-                function filterLogs() {
-                    var input = document.getElementById('logSearch').value.toLowerCase();
-                    var table = document.getElementById('logTableBody');
-                    var tr = table.getElementsByClassName('log-entry');
+                async function fetchLogs() {
+                    const logTableBody = $j('#logTableBody');
+                    logTableBody.empty();
 
-                    for (var i = 0; i < tr.length; i++) {
-                        var logMessage = tr[i].getElementsByClassName('log-message')[0].textContent || tr[i].getElementsByClassName('log-message')[0].innerText;
-                        if (logMessage.toLowerCase().indexOf(input) > -1) {
-                            tr[i].style.display = '';
-                        } else {
-                            tr[i].style.display = 'none';
+                    try {
+                        // Fetch logs from the API
+                        const response = await fetch('{$_url}plugin/mikrotik_monitor_getLogs&routerId={$router}');
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok: ' + response.statusText);
                         }
+
+                        const logs = await response.json();
+                        console.log(logs);
+
+                        logs.reverse().forEach(log => {
+                            const row = document.createElement('tr');
+                            row.classList.add('log-entry');
+
+                            // Create date/time cell
+                            const timeCell = document.createElement('td');
+                            timeCell.textContent = log.time || 'N/A';
+                            row.appendChild(timeCell);
+
+                            // Create topic cell
+                            const topicCell = document.createElement('td');
+                            topicCell.textContent = log.topics || 'N/A';
+                            row.appendChild(topicCell);
+
+                            // Create message cell with badge
+                            const messageCell = document.createElement('td');
+                            const messageBadge = document.createElement('span');
+                            messageBadge.classList.add('badge');
+
+                            // Use a safe check for the message
+                            const message = log.message || 'No message available';
+                            const messageLower = message.toLowerCase();
+
+                            if (messageLower.includes('failed')) {
+                                messageBadge.classList.add('badge-danger');
+                                messageBadge.textContent = 'Error';
+                            } else if (messageLower.includes('trying')) {
+                                messageBadge.classList.add('badge-warning');
+                                messageBadge.textContent = 'Warning';
+                            } else if (messageLower.includes('logged in')) {
+                                messageBadge.classList.add('badge-success');
+                                messageBadge.textContent = 'Success';
+                            } else if (messageLower.includes('login failed')) {
+                                messageBadge.classList.add('badge-info');
+                                messageBadge.textContent = 'Login Info';
+                            } else {
+                                messageBadge.classList.add('badge-info');
+                                messageBadge.textContent = 'Info';
+                            }
+
+                            messageCell.appendChild(messageBadge);
+                            messageCell.appendChild(document.createTextNode(' ' + message));
+                            row.appendChild(messageCell);
+                            logTableBody.append(row);
+                        });
+
+                        // Destroy existing DataTable instance if it exists
+                        if ($j.fn.DataTable.isDataTable('#logTable')) {
+                            $j('#logTable').DataTable().destroy();
+                        }
+
+                        // Reinitialize DataTable
+                        $j('#logTable').DataTable({
+                            "pagingType": "full_numbers",
+                            "order": [
+                                [0, 'desc']
+                            ]
+                        });
+
+                    } catch (error) {
+                        console.error('Error fetching logs:', error);
                     }
                 }
             </script>
+
             {include file="sections/footer.tpl"}

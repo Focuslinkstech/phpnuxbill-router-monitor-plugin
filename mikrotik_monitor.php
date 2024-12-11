@@ -1,4 +1,5 @@
 <?php
+
 use PEAR2\Net\RouterOS;
 use PEAR2\Net\RouterOS\Client;
 use PEAR2\Net\RouterOS\Request;
@@ -8,7 +9,7 @@ register_menu(" MikroTik Monitor", true, "mikrotik_monitor_ui", 'AFTER_SETTINGS'
 
 function mikrotik_monitor_ui()
 {
-    global $ui,$routes;
+    global $ui, $routes;
     _admin();
     $ui->assign('_title', 'Mikrotik Router Monitor');
     $ui->assign('_system_menu', 'Router Monitor');
@@ -16,7 +17,7 @@ function mikrotik_monitor_ui()
     $ui->assign('_admin', $admin);
     $routers = ORM::for_table('tbl_routers')->where('enabled', '1')->find_many();
     $router = $routes['2'];
-    if(empty($router)){
+    if (empty($router)) {
         $router = $routers[0]['id'];
     }
     $ui->assign('xheader', '
@@ -114,9 +115,7 @@ function mikrotik_monitor_ui()
             }
         }
     </style>');
-    //$routerId = $routes['2'] ?? ($routers ? $routers[0]['id'] : null); // Memastikan ada router yang aktif
-    $logs = mikrotik_monitor_fetchLogs($router); // Mengambil log dari router yang dipilih
-    $ui->assign('logs', $logs);
+
     $ui->assign('routers', $routers);
     $ui->assign('router', $router);
     $interfaces = mikrotik_monitor_get_interfaces_list();
@@ -126,11 +125,11 @@ function mikrotik_monitor_ui()
 
 function mikrotik_monitor_get_wlan()
 {
-  global $routes;
-  $router = $routes['2'];
-  $mikrotik = ORM::for_table('tbl_routers')->where('enabled', '1')->find_one($router);
-  $client = Mikrotik::getClient($mikrotik['ip_address'], $mikrotik['username'], $mikrotik['password']);
-  $wlan = $client->sendSync(new RouterOS\Request('/interface/wireless/registration-table/print'));
+    global $routes;
+    $router = $routes['2'];
+    $mikrotik = ORM::for_table('tbl_routers')->where('enabled', '1')->find_one($router);
+    $client = Mikrotik::getClient($mikrotik['ip_address'], $mikrotik['username'], $mikrotik['password']);
+    $wlan = $client->sendSync(new RouterOS\Request('/interface/wireless/registration-table/print'));
 
     $signalList = [];
     foreach ($wlan as $signal) {
@@ -158,11 +157,11 @@ function mikrotik_monitor_get_wlan()
             'rx_rate' => $rx_rate,
             'tx_rate' => $tx_rate,
         ];
-      }
+    }
 
-      header('Content-Type: application/json');
-      echo json_encode($signalList);
-  }
+    header('Content-Type: application/json');
+    echo json_encode($signalList);
+}
 
 function mikrotik_monitor_get_resources()
 {
@@ -300,23 +299,23 @@ function mikrotik_monitor_get_resources()
                 <tbody>
                     <tr>
                         <th>Platform</th>
-                        <td>'.$res->getProperty('platform').'</td>
+                        <td>' . $res->getProperty('platform') . '</td>
                     </tr>
                     <tr>
                         <th>Board</th>
-                        <td>'.$res->getProperty('board-name').'</td>
+                        <td>' . $res->getProperty('board-name') . '</td>
                     </tr>
                     <tr>
                         <th>Arch</th>
-                        <td>'.$res->getProperty('architecture-name').'</td>
+                        <td>' . $res->getProperty('architecture-name') . '</td>
                     </tr>
                     <tr>
                         <th>Version</th>
-                        <td>'.$res->getProperty('version').'</td>
+                        <td>' . $res->getProperty('version') . '</td>
                     </tr>
                     <tr>
                         <th>Mem used/free</th>
-                        <td>'.mikrotik_monitor_formatSize($res->getProperty('total-memory') - $res->getProperty('free-memory')).' / '.mikrotik_monitor_formatSize($res->getProperty('free-memory')).'</td>
+                        <td>' . mikrotik_monitor_formatSize($res->getProperty('total-memory') - $res->getProperty('free-memory')) . ' / ' . mikrotik_monitor_formatSize($res->getProperty('free-memory')) . '</td>
                     </tr>
                 </tbody>
             </table>
@@ -330,23 +329,23 @@ function mikrotik_monitor_get_resources()
                 <tbody>
                     <tr>
                         <th>Uptime</th>
-                        <td>'.$res->getProperty('uptime').'</td>
+                        <td>' . $res->getProperty('uptime') . '</td>
                     </tr>
                     <tr>
                         <th>Build time</th>
-                        <td>'.$res->getProperty('build-time').'</td>
+                        <td>' . $res->getProperty('build-time') . '</td>
                     </tr>
                     <tr>
                         <th>Factory Software</th>
-                        <td>'.$res->getProperty('factory-software').'</td>
+                        <td>' . $res->getProperty('factory-software') . '</td>
                     </tr>
                     <tr>
                         <th>Free Hdd Space</th>
-                        <td>'.mikrotik_monitor_formatSize($res->getProperty('free-hdd-space')).'</td>
+                        <td>' . mikrotik_monitor_formatSize($res->getProperty('free-hdd-space')) . '</td>
                     </tr>
                     <tr>
                         <th>Total Memory</th>
-                        <td>'.mikrotik_monitor_formatSize($res->getProperty('total-memory')).'</td>
+                        <td>' . mikrotik_monitor_formatSize($res->getProperty('total-memory')) . '</td>
                     </tr>
                 </tbody>
             </table>
@@ -359,23 +358,23 @@ function mikrotik_monitor_get_resources()
                 <tbody>
                     <tr>
                         <th>CPU</th>
-                        <td>'.$res->getProperty('cpu').'</td>
+                        <td>' . $res->getProperty('cpu') . '</td>
                     </tr>
                     <tr>
                         <th>CPU count/freq/load</th>
-                        <td>'.$res->getProperty('cpu-count').'/'.$res->getProperty('cpu-frequency').'/'.$res->getProperty('cpu-load').'</td>
+                        <td>' . $res->getProperty('cpu-count') . '/' . $res->getProperty('cpu-frequency') . '/' . $res->getProperty('cpu-load') . '</td>
                     </tr>
                     <tr>
                         <th>Hdd</th>
-                        <td>'.mikrotik_monitor_formatSize($res->getProperty('free-hdd-space')).' / '.mikrotik_monitor_formatSize($res->getProperty('total-hdd-space')).'</td>
+                        <td>' . mikrotik_monitor_formatSize($res->getProperty('free-hdd-space')) . ' / ' . mikrotik_monitor_formatSize($res->getProperty('total-hdd-space')) . '</td>
                     </tr>
                     <tr>
                         <th>Write Total</th>
-                        <td>'.$res->getProperty('write-sect-total').'</td>
+                        <td>' . $res->getProperty('write-sect-total') . '</td>
                     </tr>
                     <tr>
                         <th>Write Since Reboot</th>
-                        <td>'.$res->getProperty('write-sect-since-reboot').'</td>
+                        <td>' . $res->getProperty('write-sect-since-reboot') . '</td>
                     </tr>
                 </tbody>
             </table>
@@ -386,7 +385,8 @@ function mikrotik_monitor_get_resources()
     echo $table;
 }
 
-function mikrotik_monitor_get_interfaces_list() {
+function mikrotik_monitor_get_interfaces_list()
+{
     global $routes;
     $router = $routes['2'];
     $mikrotik = ORM::for_table('tbl_routers')->where('enabled', '1')->find_one($router);
@@ -480,8 +480,8 @@ function mikrotik_monitor_get_ppp_online_users()
         $uptime = $pppUser->getProperty('uptime');
         $service = $pppUser->getProperty('service');
         $callerid = $pppUser->getProperty('caller-id');
-      //$bytes_in = $pppUser->getProperty('limit-bytes-in');
-      //$bytes_out = $pppUser->getProperty('limit-bytes-out');
+        //$bytes_in = $pppUser->getProperty('limit-bytes-in');
+        //$bytes_out = $pppUser->getProperty('limit-bytes-out');
 
         // Retrieve user usage based on interface name
         $interfaceName = "<pppoe-$username>";
@@ -490,7 +490,7 @@ function mikrotik_monitor_get_ppp_online_users()
             $trafficData = $interfaceData[$interfaceName];
             $txBytes = $trafficData['txBytes'];
             $rxBytes = $trafficData['rxBytes'];
-        }  else {
+        } else {
             $txBytes = 0;
             $rxBytes = 0;
         }
@@ -501,14 +501,14 @@ function mikrotik_monitor_get_ppp_online_users()
             'uptime' => $uptime,
             'service' => $service,
             'caller_id' => $callerid,
-          //  'bytes_in' => $bytes_in,
-          //  'bytes_out' => $bytes_out,
+            //  'bytes_in' => $bytes_in,
+            //  'bytes_out' => $bytes_out,
             'tx' => mikrotik_monitor_formatBytes($txBytes),
             'rx' => mikrotik_monitor_formatBytes($rxBytes),
             'total' => mikrotik_monitor_formatBytes($txBytes + $rxBytes),
         ];
     }
-  //  var_dump(isset($interfaceData[$interfaceName]));
+    //  var_dump(isset($interfaceData[$interfaceName]));
 
     // Return the PPP online user list as JSON
     header('Content-Type: application/json');
@@ -552,47 +552,46 @@ function mikrotik_monitor_get_hotspot_online_users()
     // Return the Hotspot online user list as JSON
     header('Content-Type: application/json');
     echo json_encode($hotspotList);
-
 }
 
 function mikrotik_monitor_disconnect_online_user($router, $username, $userType)
 {
-  // Check if the form was submitted
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  // Retrieve the form data
-  $router = $_POST['router'];
-  $username = $_POST['username'];
-  $userType = $_POST['userType'];
+    // Check if the form was submitted
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        // Retrieve the form data
+        $router = $_POST['router'];
+        $username = $_POST['username'];
+        $userType = $_POST['userType'];
 
-    $mikrotik = ORM::for_table('tbl_routers')->where('enabled', '1')->find_one($router);
+        $mikrotik = ORM::for_table('tbl_routers')->where('enabled', '1')->find_one($router);
 
-    if (!$mikrotik) {
-        // Handle the error response or redirection
-        return;
-    }
-
-    try {
-        $client = Mikrotik::getClient($mikrotik['ip_address'], $mikrotik['username'], $mikrotik['password']);
-
-        if ($userType == 'hotspot') {
-            Mikrotik::removeHotspotActiveUser($client, $username);
-            // Handle the success response or redirection
-        } elseif ($userType == 'pppoe') {
-            Mikrotik::removePpoeActive($client, $username);
-            // Handle the success response or redirection
-        } else {
+        if (!$mikrotik) {
             // Handle the error response or redirection
             return;
         }
-    } catch (Exception $e) {
-        // Handle the error response or redirection
-    } finally {
-        // Disconnect from the MikroTik router
-        if (isset($client)) {
-            $client->disconnect();
+
+        try {
+            $client = Mikrotik::getClient($mikrotik['ip_address'], $mikrotik['username'], $mikrotik['password']);
+
+            if ($userType == 'hotspot') {
+                Mikrotik::removeHotspotActiveUser($client, $username);
+                // Handle the success response or redirection
+            } elseif ($userType == 'pppoe') {
+                Mikrotik::removePpoeActive($client, $username);
+                // Handle the success response or redirection
+            } else {
+                // Handle the error response or redirection
+                return;
+            }
+        } catch (Exception $e) {
+            // Handle the error response or redirection
+        } finally {
+            // Disconnect from the MikroTik router
+            if (isset($client)) {
+                $client->disconnect();
+            }
         }
     }
-  }
 }
 
 function mikrotik_monitor_traffic_update()
@@ -639,7 +638,8 @@ function mikrotik_monitor_traffic_update()
     echo json_encode($result);
 }
 
-function mikrotik_monitor_get_resources_json() {
+function mikrotik_monitor_get_resources_json()
+{
     global $routes;
     $router = $routes['2'];
     $mikrotik = ORM::for_table('tbl_routers')->where('enabled', '1')->find_one($router);
@@ -656,26 +656,39 @@ function mikrotik_monitor_get_resources_json() {
     header('Content-Type: application/json');
     echo json_encode($data);
 }
-
-// Fungsi untuk mengambil logs dari MikroTik
-function mikrotik_monitor_fetchLogs($routerId) {
+function mikrotik_monitor_fetchLogs($routerId)
+{
     if (!$routerId) {
-        return []; // Mengembalikan array kosong jika router tidak tersedia
+        return [];
     }
-    
-    $mikrotik = ORM::for_table('tbl_routers')->where('enabled', '1')->find_one($routerId);
-    if (!$mikrotik) {
-        return []; // Mengembalikan array kosong jika router tidak ditemukan
+
+    try {
+        $mikrotik = ORM::for_table('tbl_routers')->where('enabled', '1')->find_one($routerId);
+        if (!$mikrotik) {
+            return []; 
+        }
+
+        $client = Mikrotik::getClient($mikrotik['ip_address'], $mikrotik['username'], $mikrotik['password']);
+        $request = new Request('/log/print');
+        $response = $client->sendSync($request);
+
+        $logs = [];
+        foreach ($response as $entry) {
+            $logs[] = $entry->getIterator()->getArrayCopy();
+        }
+        return $logs;
+    } catch (Exception $e) {
+        _log('Error fetching logs: ' . $e->getMessage());
+        sendTelegram('Mikrotik Monitor Error fetching logs.\nReport: ' . $e->getMessage());
+        return [];
     }
-    
-    $client = Mikrotik::getClient($mikrotik['ip_address'], $mikrotik['username'], $mikrotik['password']);
-    $request = new Request('/log/print');
-    $response = $client->sendSync($request);
-    
-    $logs = [];
-    foreach ($response as $entry) {
-        $logs[] = $entry->getIterator()->getArrayCopy(); // Mengumpulkan data dari setiap entry
-    }
-    
-    return $logs;
+}
+
+function mikrotik_monitor_getLogs()
+{
+    header('Content-Type: application/json');
+    $routerId = $_GET['routerId'] ?? null;
+
+    $logs = mikrotik_monitor_fetchLogs($routerId);
+    echo json_encode($logs);
 }
