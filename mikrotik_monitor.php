@@ -391,18 +391,24 @@ function mikrotik_monitor_get_interfaces_list()
     $router = $routes['2'];
     $mikrotik = ORM::for_table('tbl_routers')->where('enabled', '1')->find_one($router);
     $client = Mikrotik::getClient($mikrotik['ip_address'], $mikrotik['username'], $mikrotik['password']);
-    $interfaces = $client->sendSync(new RouterOS\Request('/interface/print'));
-
-    $interfaceList = [];
-    foreach ($interfaces as $interface) {
-        $name = $interface->getProperty('name');
-        if (!empty($name)) {
-            // Escape HTML characters
-            $safeName = htmlspecialchars($name, ENT_QUOTES, 'UTF-8');
-            $interfaceList[] = $safeName;
+    
+    try {
+        $interfaces = $client->sendSync(new RouterOS\Request('/interface/print'));
+        $interfaceList = [];
+        foreach ($interfaces as $interface) {
+            $name = $interface->getProperty('name');
+            if (!empty($name)) {
+                // Escape HTML characters
+                $safeName = htmlspecialchars($name, ENT_QUOTES, 'UTF-8');
+                $interfaceList[] = $safeName;
+            }
         }
+        return $interfaceList;
+    } catch (Exception $e) {
+        _log('Mikrotik Monitor Error fetching interface list: ' . $e->getMessage());
+        sendTelegram('Mikrotik Monitor Error fetching interface list: ' . $e->getMessage());
+        return [];
     }
-    return $interfaceList;
 }
 
 function mikrotik_monitor_get_traffic()
@@ -665,7 +671,7 @@ function mikrotik_monitor_fetchLogs($routerId)
     try {
         $mikrotik = ORM::for_table('tbl_routers')->where('enabled', '1')->find_one($routerId);
         if (!$mikrotik) {
-            return []; 
+            return [];
         }
 
         $client = Mikrotik::getClient($mikrotik['ip_address'], $mikrotik['username'], $mikrotik['password']);
